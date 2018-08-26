@@ -37,6 +37,11 @@ import java.util.Set;
 public class AddressBook {
 
     /**
+     * Similarity distance for hamming distance
+     */
+    private static final Integer ACCEPTABLE_HAMMING_DISTANCE = 2;
+
+    /**
      * Default file path used if the user doesn't provide the file name.
      */
     private static final String DEFAULT_STORAGE_FILEPATH = "addressbook.txt";
@@ -485,12 +490,41 @@ public class AddressBook {
     private static ArrayList<String[]> getPersonsWithNameContainingAnyKeyword(Collection<String> keywords) {
         final ArrayList<String[]> matchedPersons = new ArrayList<>();
         for (String[] person : getAllPersonsInAddressBook()) {
-            final Set<String> wordsInName = new HashSet<>(splitByWhitespace(getNameFromPerson(person)));
-            if (!Collections.disjoint(wordsInName, keywords)) {
-                matchedPersons.add(person);
+//            final Set<String> wordsInName = new HashSet<>(splitByWhitespace(getNameFromPerson(person)));
+//            if (!Collections.disjoint(wordsInName, keywords)) {
+//                matchedPersons.add(person);
+//            }
+
+            for (String keyword: keywords) {
+                if (hamming_distance(keyword, person[0]) < ACCEPTABLE_HAMMING_DISTANCE) {
+                    matchedPersons.add(person);
+                }
             }
         }
         return matchedPersons;
+    }
+
+    private static Integer hamming_distance (CharSequence left, CharSequence right) {
+        if (left == null || right == null) {
+            throw new IllegalArgumentException("CharSequences must not be null");
+        }
+
+        if (left.length() != right.length()) {
+            if (left.length() > right.length()) {
+                // Swap
+                CharSequence temp = right;
+                right = left;
+                left = temp;
+            }
+        }
+        int distance = 0;
+
+        for (int i = 0; i < left.length(); i++) {
+            if (left.charAt(i) != right.charAt(i)) {
+                distance++;
+            }
+        }
+        return distance;
     }
 
     /**

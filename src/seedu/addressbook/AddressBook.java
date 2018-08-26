@@ -111,8 +111,13 @@ public class AddressBook {
     private static final String COMMAND_ADD_EXAMPLE = COMMAND_ADD_WORD + " John Doe p/98765432 e/johnd@gmail.com";
 
     private static final String COMMAND_FIND_WORD = "find";
+    private static final String COMMAND_FIND_WORD_NUMBER = "findphone";
+    private static final String COMMAND_FIND_WORD_ADDRESS = "findaddress";
+
     private static final String COMMAND_FIND_DESC = "Finds all persons whose names contain any of the specified "
-                                        + "keywords (case-sensitive) and displays them as a list with index numbers.";
+                                        + "keywords (case-sensitive) and displays them as a list with index numbers."
+                                        + " (findaddress - find by address"
+                                        + ", findphone - find by phone number)";
     private static final String COMMAND_FIND_PARAMETERS = "KEYWORD [MORE_KEYWORDS]";
     private static final String COMMAND_FIND_EXAMPLE = COMMAND_FIND_WORD + " alice bob charlie";
 
@@ -378,6 +383,10 @@ public class AddressBook {
             return executeAddPerson(commandArgs);
         case COMMAND_FIND_WORD:
             return executeFindPersons(commandArgs);
+        case COMMAND_FIND_WORD_ADDRESS:
+            return executeFindPersonsAddress(commandArgs);
+        case COMMAND_FIND_WORD_NUMBER:
+            return executeFindPersonsPhone(commandArgs);
         case COMMAND_LIST_WORD:
             return executeListAllPersonsInAddressBook();
         case COMMAND_DELETE_WORD:
@@ -461,6 +470,22 @@ public class AddressBook {
         return getMessageForPersonsDisplayedSummary(personsFound);
     }
 
+    private static String executeFindPersonsAddress(String commandArgs) {
+        final Set<String> keywords = extractKeywordsFromFindPersonArgs(commandArgs);
+        final ArrayList<String[]> personsFound = getPersonsWithAddressContainingAnyKeyword(keywords);
+        showToUser(personsFound);
+        return getMessageForPersonsDisplayedSummary(personsFound);
+    }
+
+
+    private static String executeFindPersonsPhone(String commandArgs) {
+        final Set<String> keywords = extractKeywordsFromFindPersonArgs(commandArgs);
+        final ArrayList<String[]> personsFound = getPersonsWithPhoneContainingAnyKeyword(keywords);
+        showToUser(personsFound);
+        return getMessageForPersonsDisplayedSummary(personsFound);
+    }
+
+
     /**
      * Constructs a feedback message to summarise an operation that displayed a listing of persons.
      *
@@ -503,6 +528,32 @@ public class AddressBook {
         }
         return matchedPersons;
     }
+
+    private static ArrayList<String[]> getPersonsWithAddressContainingAnyKeyword(Collection<String> keywords) {
+        final ArrayList<String[]> matchedPersons = new ArrayList<>();
+        for (String[] person : getAllPersonsInAddressBook()) {
+            for (String keyword: keywords) {
+                if (hamming_distance(keyword, person[2]) < ACCEPTABLE_HAMMING_DISTANCE) {
+                    matchedPersons.add(person);
+                }
+            }
+        }
+        return matchedPersons;
+    }
+
+
+    private static ArrayList<String[]> getPersonsWithPhoneContainingAnyKeyword(Collection<String> keywords) {
+        final ArrayList<String[]> matchedPersons = new ArrayList<>();
+        for (String[] person : getAllPersonsInAddressBook()) {
+            for (String keyword: keywords) {
+                if (hamming_distance(keyword, person[1]) < ACCEPTABLE_HAMMING_DISTANCE) {
+                    matchedPersons.add(person);
+                }
+            }
+        }
+        return matchedPersons;
+    }
+
 
     private static Integer hamming_distance (CharSequence left, CharSequence right) {
         if (left == null || right == null) {
@@ -1138,6 +1189,7 @@ public class AddressBook {
                 + String.format(MESSAGE_COMMAND_HELP_PARAMETERS, COMMAND_FIND_PARAMETERS) + LS
                 + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_FIND_EXAMPLE) + LS;
     }
+
 
     /** Returns the string for showing 'delete' command usage instruction */
     private static String getUsageInfoForDeleteCommand() {
